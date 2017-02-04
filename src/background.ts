@@ -1,6 +1,5 @@
 import TabService from './service/TabService';
 import HistoryFlowService from './service/HistoryFlowService';
-import HistoryService from './service/HistoryService';
 import ScreenshotService from './service/ScreenshotService';
 import StorageService from './service/StorageService';
 import { inject } from './modules';
@@ -10,7 +9,6 @@ import Message from './constant/message';
 class BackgroundApp {
     private tabsService = inject(TabService);
     private historyFlowService = inject(HistoryFlowService);
-    private historyService = inject(HistoryService);
     private screenshotService = inject(ScreenshotService);
     private storageService = inject(StorageService);
 
@@ -21,9 +19,9 @@ class BackgroundApp {
         app.attachRequestFlowListeners();
     }
 
-    setActiveTabId(tabId: number, windowId: number) {
-        this.historyFlowService.setActiveTabId(tabId);
+    onTabFocusHandler(tabId: number, windowId: number) {
         this.tabsService.getPageId(tabId).then(pageId => {
+            this.historyFlowService.setCurrentPageId(pageId);
             if (pageId) {
                 this.screenshotService.hasScreenshot(pageId).then(hasScreenshot => {
                     if (!hasScreenshot) {
@@ -39,38 +37,15 @@ class BackgroundApp {
     attachRequestFlowListeners() {
         chrome.webRequest.onSendHeaders.addListener((details) => {
             if (details.type === "main_frame") {
-                const referrerUrlPromise = new Promise<string>((resolve) => {
-                    let referrerUrls = details.requestHeaders
-                        .filter(header => header.name === "Referer")
-                        .map(header => header.value);
-
-                    if (referrerUrls.length) {
-                        resolve(ArrayUtil.first(referrerUrls));
-                    } else {
-                        this.tabsService.get(this.historyFlowService.getActiveTabId()).then((tab) => {
-                            resolve(tab.url);
-                        });
-                    }
-                });
-
-                referrerUrlPromise.then(referrerUrl => {
-                    this.historyFlowService.startVisit(details.tabId, details.url, referrerUrl);
-                });
+                this.historyFlowService.startVisit(details.tabId, this.historyFlowService.getCurrentPageId(), details.url);
             }
-        }, { urls: ["<all_urls>"] }, ["requestHeaders"]);
-
-        chrome.history.onVisited.addListener((historyItem) => {
-            this.historyService.getVisits({ url: historyItem.url }).then((visitItems) => {
-                const visitItem = ArrayUtil.last(visitItems);
-                this.historyFlowService.registerVisit(historyItem.url, visitItem.visitId);
-            });
-        });
+        }, { urls: ["<all_urls>"] });
 
         chrome.runtime.onMessage.addListener((message: {type: Message, id: string}, sender, sendResponse) => {
             if (message.type === Message.REGISTER_PAGE) {
                 this.historyFlowService.setPageId(sender.tab.id, message.id);
                 if (sender.tab.active) {
-                    this.setActiveTabId(sender.tab.id, sender.tab.windowId);
+                    this.onTabFocusHandler(sender.tab.id, sender.tab.windowId);
                 }
             }
         });
@@ -78,7 +53,7 @@ class BackgroundApp {
 
     attachActiveTabListeners() {
         chrome.tabs.onActivated.addListener((activeInfo) => {
-            this.setActiveTabId(activeInfo.tabId, activeInfo.windowId);
+            this.onTabFocusHandler(activeInfo.tabId, activeInfo.windowId);
         });
 
         chrome.windows.onFocusChanged.addListener((windowId) => {
@@ -88,7 +63,7 @@ class BackgroundApp {
 
             chrome.windows.get(windowId, { populate: true }, (win) => {
                 const activeTab = ArrayUtil.first(win.tabs.filter((tab) => tab.active));
-                this.setActiveTabId(activeTab.id, activeTab.windowId);
+                this.onTabFocusHandler(activeTab.id, activeTab.windowId);
             });
         });
     }

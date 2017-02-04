@@ -1,19 +1,24 @@
 export default class HistoryFlowEntry {
   private visitItemId: string;
   private pageId: string;
-  constructor(private tabId: number, private url: string, private referrerUrl: string) {
+
+  constructor(private tabId: number, private parentPageId: string, private url: string) {
+  }
+
+  setPageId(pageId: string) {
+    this.pageId = pageId;
   }
 
   getPageId(): string {
     return this.pageId;
   }
 
-  getUrl(): string {
-    return this.url;
+  getParentPageId() {
+    return this.parentPageId;
   }
 
-  getReferrerUrl(): string {
-    return this.referrerUrl;
+  getUrl(): string {
+    return this.url;
   }
 
   getVisitItemId(): string {
@@ -26,9 +31,5 @@ export default class HistoryFlowEntry {
 
   setVisitItemId(visitItemId: string) {
     this.visitItemId = visitItemId;
-  }
-
-  setPageId(pageId: string) {
-    this.pageId = pageId;
   }
 }

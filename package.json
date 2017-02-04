@@ -1,5 +1,6 @@
 {
   "name": "history-redux",
+  "private": true,
   "version": "1.0.0",
   "repository": {
     "type": "git",

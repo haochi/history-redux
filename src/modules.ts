@@ -1,7 +1,5 @@
 import Injector, { Constructable } from './service/InjectorService';
 import TabService from './service/TabService';
-import HistoryService from './service/HistoryService';
-import TimerService from './service/TimerService';
 import HistoryFlowService from './service/HistoryFlowService';
 import ScreenshotService from './service/ScreenshotService';
 import StorageService from './service/StorageService';
@@ -12,8 +10,6 @@ function inject<T>(klass: Constructable<T>): T {
     return injector.inject(klass);
 }
 
-injector.bind(HistoryService);
-injector.bind(TimerService);
 injector.bind(LoggingService);
 injector.bind(StorageService);
 injector.bindTo(TabService, new TabService(inject(LoggingService)));

@@ -5,24 +5,15 @@ import CryptoUtil from '../util/CryptoUtil';
 export default class HistoryFlowService {
   private stack: HistoryFlowEntry[] = [];
   private activeTabId = -1;
+  private currentPageId: string = null;
 
   constructor(private loggingService: LoggingService) {
   }
 
-  startVisit(tabId: number, url: string, referrerUrl: string) {
+  startVisit(tabId: number, parentPageId: string, url: string) {
     this.loggingService.logCall('startVisit', arguments);
-    const entry = new HistoryFlowEntry(tabId, url, referrerUrl);
+    const entry = new HistoryFlowEntry(tabId, parentPageId, url);
     this.stack.push(entry);
-  }
-
-  registerVisit(url: string, visitItemId: string) {
-    for (let entry of this.stack) {
-      if (entry.getUrl() === url && !entry.getVisitItemId()) {
-        this.loggingService.logCall('registerVisit', arguments);
-        entry.setVisitItemId(visitItemId);
-        break;
-      }
-    }
   }
 
   setPageId(tabId: number, pageId: string) {
@@ -35,20 +26,12 @@ export default class HistoryFlowService {
     }
   }
 
-  getEntryByTabId(tabId: number) {
-    for (let entry of this.stack) {
-      if (entry.getTabId() === tabId) {
-        return entry;
-      }
-    }
+  setCurrentPageId(currentPageId: string) {
+    this.currentPageId = currentPageId;
+    this.loggingService.logCall('setCurrentPageId', arguments);
   }
 
-  setActiveTabId(activeTabId: number) {
-    this.activeTabId = activeTabId;
-    this.loggingService.logCall('setActiveTabId', arguments);
-  }
-
-  getActiveTabId(): number {
-    return this.activeTabId;
+  getCurrentPageId() {
+    return this.currentPageId;
   }
 }

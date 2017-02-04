@@ -10,7 +10,7 @@ export default class ScreenshotService {
     }
 
     takeScreenshot(pageId: string, windowId: number): Promise<void> {
-        this.loggingService.logCall('take', arguments);
+        this.loggingService.logCall('takeScreenshot', arguments);
         return new Promise<void>((resolve) => {
             this.tabService.captureVisibleTab(windowId, { format: "jpeg" }).then(dataUrl => {
                 const image = document.createElement('img');
