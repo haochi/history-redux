@@ -1,0 +1,32 @@
+{
+  "name": "History Redux",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "",
+  "homepage_url": "https://github.com/haochi/history-redux",
+  "background": {
+    "scripts": [
+      "dist/background.js"
+    ],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_action": {
+    "default_title": "History Redux"
+  },
+  "permissions": [
+    "<all_urls>",
+    "history",
+    "tabs",
+    "webNavigation",
+    "webRequest",
+    "storage",
+    "unlimitedStorage"
+  ]
+}
