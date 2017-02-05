@@ -4,6 +4,7 @@ import HistoryFlowService from './service/HistoryFlowService';
 import ScreenshotService from './service/ScreenshotService';
 import StorageService from './service/StorageService';
 import LoggingService from './service/LoggingService';
+import DatabaseService from './service/DatabaseService';
 
 const injector = new Injector();
 function inject<T>(klass: Constructable<T>): T {
@@ -12,8 +13,9 @@ function inject<T>(klass: Constructable<T>): T {
 
 injector.bind(LoggingService);
 injector.bind(StorageService);
+injector.bind(DatabaseService);
 injector.bindTo(TabService, new TabService(inject(LoggingService)));
-injector.bindTo(HistoryFlowService, new HistoryFlowService(inject(LoggingService)));
+injector.bindTo(HistoryFlowService, new HistoryFlowService(inject(LoggingService), inject(DatabaseService)));
 injector.bindTo(ScreenshotService, new ScreenshotService(inject(TabService), inject(StorageService), inject(LoggingService)));
 
 export default injector;

@@ -1,5 +1,4 @@
 export default class HistoryFlowEntry {
-  private visitItemId: string;
   private pageId: string;
   private startedAt: number;
   private title: string;

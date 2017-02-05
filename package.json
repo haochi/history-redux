@@ -12,6 +12,7 @@
     "@types/chrome": "^0.0.38",
     "@types/es6-shim": "^0.31.32",
     "browserify": "^14.0.0",
+    "dexie": "^2.0.0-beta",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^2.4.0",
     "gulp-typescript": "^3.1.4",

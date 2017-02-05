@@ -1,5 +1,6 @@
 import HistoryFlowEntry from '../model/HistoryFlowEntry';
 import LoggingService from '../service/LoggingService';
+import DatabaseService from '../service/DatabaseService';
 import CryptoUtil from '../util/CryptoUtil';
 
 export default class HistoryFlowService {
@@ -8,7 +9,7 @@ export default class HistoryFlowService {
   private activeTabId = -1;
   private currentPageId: string = null;
 
-  constructor(private loggingService: LoggingService) {
+  constructor(private loggingService: LoggingService, private databaseService: DatabaseService) {
   }
 
   startVisit(tabId: number, parentPageId: string, url: string) {
