@@ -11,29 +11,30 @@ export default class ScreenshotService {
 
     takeScreenshot(pageId: string, windowId: number): Promise<void> {
         this.loggingService.logCall('takeScreenshot', arguments);
-        return new Promise<void>((resolve) => {
-            this.tabService.captureVisibleTab(windowId, { format: "jpeg" }).then(dataUrl => {
+        return new Promise<void>(async (resolve) => {
+            try {
+                const dataUrl = await this.tabService.captureVisibleTab(windowId, { format: "jpeg" });
                 const image = document.createElement('img');
-                image.onload = () => {
-                    this.saveScreenshot(pageId, this.resize(image)).then(resolve);
+                image.onload = async() => {
+                    const dataUrl = await this.saveScreenshot(pageId, this.resize(image));
+                    resolve(dataUrl);
                 };
                 image.src = dataUrl;
-            }).catch(e => {
-                this.loggingService.errorCall(`Can't capture screenshot for $${window}`, arguments, e);
-            });
+            } catch (e) {
+                this.loggingService.errorCall(`Can't capture screenshot for $${windowId}`, arguments, e);
+            }
         });
     }
 
-    hasScreenshot(id: string): Promise<boolean> {
+    async hasScreenshot(id: string) {
         const key = this.key(id);
-        return this.storageService.get(key).then((value) => value.hasOwnProperty(key));
+        const value = await this.storageService.get(key)
+        return value.hasOwnProperty(key);
     }
 
     saveScreenshot(id: string, dataUrl: string) {
         const key = this.key(id);
-        return this.storageService.set({
-            [key]: dataUrl
-        });
+        return this.storageService.set({ [key]: dataUrl });
     }
 
     private key(id: string) {

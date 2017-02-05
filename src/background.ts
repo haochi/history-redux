@@ -24,18 +24,18 @@ class BackgroundApp {
         app.attachTabPinger();
     }
 
-    private onTabFocusHandler(tabId: number, windowId: number) {
-        this.tabsService.getPageId(tabId).then(pageId => {
+    private async onTabFocusHandler(tabId: number, windowId: number) {
+        try {
+            const pageId = await this.tabsService.getPageId(tabId);
             this.historyFlowService.setCurrentPageId(pageId);
-            this.screenshotService.hasScreenshot(pageId).then(hasScreenshot => {
-                if (!hasScreenshot) {
-                    this.screenshotService.takeScreenshot(pageId, windowId);
-                }
-            });
-        }).catch((e: Error) => {
+            const hasScreenshot = await this.screenshotService.hasScreenshot(pageId);
+            if (!hasScreenshot) {
+                this.screenshotService.takeScreenshot(pageId, windowId);
+            }
+        } catch (e) {
             this.historyFlowService.setCurrentPageId(null);
             this.loggingService.log(`onTabFocusHandler(): ${e.message}`);
-        });
+        }
     }
 
     private attachTabPinger() {
@@ -62,7 +62,7 @@ class BackgroundApp {
             if (details.frameId === 0) {
                 this.historyFlowService.startVisit(details.tabId, this.historyFlowService.getCurrentPageId(), details.url);
 
-                chrome.tabs.sendMessage(details.tabId, { type: Message.HISTORY_GET_PAGE_ID }, async(response: {id: string}) => {
+                chrome.tabs.sendMessage(details.tabId, { type: Message.HISTORY_GET_PAGE_ID }, async (response: { id: string }) => {
                     this.historyFlowService.setPageIdForTab(details.tabId, response.id);
                     const tab = await this.tabsService.get(details.tabId);
                     this.onTabFocusHandler(details.tabId, tab.windowId);
