@@ -23,6 +23,10 @@ class ContentApp {
         chrome.runtime.onMessage.addListener((request: { type: Message }, sender, sendResponse) => {
             if (request.type == Message.GET_PAGE_ID) {
                 sendResponse({ id: this.pageId });
+            } else if (request.type === Message.HISTORY_GET_PAGE_ID) {
+                this.setPageId();
+                sendResponse({ id: this.pageId });
+                this.sendTitle();
             }
         });
 

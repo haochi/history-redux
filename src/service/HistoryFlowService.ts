@@ -23,12 +23,16 @@ export default class HistoryFlowService {
   setPageIdForTab(tabId: number, pageId: string) {
     this.loggingService.logCall('setPageIdForTab', arguments);
     this.databaseService.withRWTransaction(async (table) => {
-      const entry = await table.where({ tabId }).reverse().first();
+      try {
+        const entry = await table.where({ tabId }).reverse().first();
 
-      if (!entry.pageId) {
-        table.update(entry.id, { pageId });
-      } else {
-        this.loggingService.errorCall('setPageIdForTab', arguments, `looked for the wrong entry`);
+        if (!entry.pageId) {
+          table.update(entry.id, { pageId });
+        } else {
+          this.loggingService.errorCall('setPageIdForTab', arguments, `looked for the wrong entry`);
+        }
+      } catch (e) {
+        this.loggingService.errorCall('setPageIdForTab', arguments, e);
       }
     });
   }

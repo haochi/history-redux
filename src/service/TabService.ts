@@ -3,7 +3,6 @@ import LoggingService from './LoggingService';
 
 export default class TabService {
     constructor(private loggingService: LoggingService) {
-
     }
 
     async openUrlOrSwitchTab(url: string): Promise<chrome.tabs.Tab> {

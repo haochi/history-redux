@@ -51,11 +51,24 @@ class BackgroundApp {
     }
 
     private attachRequestFlowListeners() {
+        // a page "load" will either go through the webRequest.onSendHeaders or the webNavigation.onHistoryStateUpdated handler
         chrome.webRequest.onSendHeaders.addListener((details) => {
             if (details.type === "main_frame") {
                 this.historyFlowService.startVisit(details.tabId, this.historyFlowService.getCurrentPageId(), details.url);
             }
         }, { urls: ["<all_urls>"] });
+
+        chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
+            if (details.frameId === 0) {
+                this.historyFlowService.startVisit(details.tabId, this.historyFlowService.getCurrentPageId(), details.url);
+
+                chrome.tabs.sendMessage(details.tabId, { type: Message.HISTORY_GET_PAGE_ID }, async(response: {id: string}) => {
+                    this.historyFlowService.setPageIdForTab(details.tabId, response.id);
+                    const tab = await this.tabsService.get(details.tabId);
+                    this.onTabFocusHandler(details.tabId, tab.windowId);
+                });
+            }
+        });
 
         chrome.runtime.onMessage.addListener((message: { type: Message, id: string }, sender, sendResponse) => {
             if (message.type === Message.SEND_PAGE_ID) {
