@@ -30,6 +30,14 @@ export default class TabService {
         });
     }
 
+    getPageTitle(tabId: number): Promise<string> {
+        return new Promise<string>((resolve) => {
+            chrome.tabs.sendMessage(tabId, { type: message.GET_PAGE_TITLE }, (response) => {
+                resolve(response.title);
+            });
+        });
+    }
+
     get(tabId: number): Promise<chrome.tabs.Tab> {
         return new Promise<chrome.tabs.Tab>((resolve, reject) => {
             chrome.tabs.get(tabId, (tab) => {

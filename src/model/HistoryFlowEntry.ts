@@ -1,6 +1,9 @@
 export default class HistoryFlowEntry {
   private visitItemId: string;
   private pageId: string;
+  private startedAt: number;
+  private title: string;
+  private timeSpent: number = 0;
 
   constructor(private tabId: number, private parentPageId: string, private url: string) {
   }
@@ -13,6 +16,14 @@ export default class HistoryFlowEntry {
     return this.pageId;
   }
 
+  getTitle(): string {
+    return this.title;
+  }
+
+  setTitle(title: string) {
+    this.title = title;
+  }
+
   getParentPageId() {
     return this.parentPageId;
   }
@@ -21,15 +32,11 @@ export default class HistoryFlowEntry {
     return this.url;
   }
 
-  getVisitItemId(): string {
-    return this.visitItemId;
-  }
-
   getTabId(): number {
     return this.tabId;
   }
 
-  setVisitItemId(visitItemId: string) {
-    this.visitItemId = visitItemId;
+  addTimeSpent(timeInMs: number) {
+    this.timeSpent += timeInMs;
   }
 }

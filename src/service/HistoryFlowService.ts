@@ -4,6 +4,7 @@ import CryptoUtil from '../util/CryptoUtil';
 
 export default class HistoryFlowService {
   private stack: HistoryFlowEntry[] = [];
+  private lookup: Map<string, HistoryFlowEntry> = new Map<string, HistoryFlowEntry>();
   private activeTabId = -1;
   private currentPageId: string = null;
 
@@ -16,14 +17,20 @@ export default class HistoryFlowService {
     this.stack.push(entry);
   }
 
-  setPageId(tabId: number, pageId: string) {
+  setPageIdForTab(tabId: number, pageId: string) {
     for (let entry of this.stack) {
       if (entry.getTabId() === tabId && !entry.getPageId()) {
         this.loggingService.logCall('setPageId', arguments);
         entry.setPageId(pageId);
+        this.lookup.set(pageId, entry);
         break;
       }
     }
+  }
+
+  setPageTitleForPageId(title: string, pageId: string) {
+    const entry = this.lookup.get(pageId);
+    entry.setTitle(title);
   }
 
   setCurrentPageId(currentPageId: string) {
@@ -33,5 +40,21 @@ export default class HistoryFlowService {
 
   getCurrentPageId() {
     return this.currentPageId;
+  }
+
+  tickTimeSpentForPageId(pageId: string, timeInMs: number) {
+    const entry = this.lookup.get(pageId);
+    if (entry) {
+      entry.addTimeSpent(timeInMs);
+    }
+  }
+
+  inspect(pageId: string) {
+    let entry = this.lookup.get(pageId);
+    if (entry) {
+      console.group(entry.getTitle());
+      this.inspect(entry.getParentPageId());
+      console.groupEnd();
+    }
   }
 }

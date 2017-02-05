@@ -1,26 +1,40 @@
 import CryptoUtil from './util/CryptoUtil';
 import message from './constant/message';
-import symbol from './constant/symbol';
+
+const PAGE_ID = Symbol();
 
 class ContentApp {
+    private pageId: string;
+
     static main() {
         const app = new ContentApp();
-        app.registerPage();
+        app.setPageId();
+        app.sendPageId();
         app.attachListeners();
     }
 
-    registerPage() {
-        const id = CryptoUtil.uuid4();
-        document[symbol.PAGE_ID] = id;
-        chrome.runtime.sendMessage({ type: message.REGISTER_PAGE, id });
+    sendPageId() {
+        chrome.runtime.sendMessage({ type: message.SEND_PAGE_ID, id: this.pageId });
+    }
+
+    sendTitle() {
+        chrome.runtime.sendMessage({ type: message.SEND_PAGE_TITLE, id: this.pageId, title: document.title });
     }
 
     attachListeners() {
         chrome.runtime.onMessage.addListener((request: { type: message }, sender, sendResponse) => {
             if (request.type == message.GET_PAGE_ID) {
-                sendResponse({ id: document[symbol.PAGE_ID] });
+                sendResponse({ id: this.pageId });
             }
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            this.sendTitle();
+        });
+    }
+
+    setPageId() {
+        this.pageId = CryptoUtil.uuid4();
     }
 }
 
