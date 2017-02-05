@@ -6,16 +6,15 @@ export default class TabService {
 
     }
 
-    openUrlOrSwitchTab(url: string): Promise<chrome.tabs.Tab> {
-        return this.query({ currentWindow: true }).then((tabs) => {
-            const firstTabWithSameUrl = tabs.filter(tab => tab.url === url)[0];
+    async openUrlOrSwitchTab(url: string): Promise<chrome.tabs.Tab> {
+        const tabs = await this.query({ currentWindow: true });
+        const firstTabWithSameUrl = tabs.filter(tab => tab.url === url)[0];
 
-            if (firstTabWithSameUrl) {
-                return this.update(firstTabWithSameUrl.id, { selected: true });
-            } else {
-                return this.create({ url: url });
-            }
-        });
+        if (firstTabWithSameUrl) {
+            return this.update(firstTabWithSameUrl.id, { selected: true });
+        } else {
+            return this.create({ url: url });
+        }
     }
 
     getPageId(tabId: number): Promise<string> {

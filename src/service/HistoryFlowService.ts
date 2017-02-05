@@ -1,11 +1,9 @@
-import HistoryFlowEntry from '../model/HistoryFlowEntry';
 import LoggingService from '../service/LoggingService';
 import DatabaseService from '../service/DatabaseService';
+import { IHistoryFlowEntry } from '../database/HistoryFlowDatabase';
 import CryptoUtil from '../util/CryptoUtil';
 
 export default class HistoryFlowService {
-  private stack: HistoryFlowEntry[] = [];
-  private lookup: Map<string, HistoryFlowEntry> = new Map<string, HistoryFlowEntry>();
   private activeTabId = -1;
   private currentPageId: string = null;
 
@@ -14,24 +12,30 @@ export default class HistoryFlowService {
 
   startVisit(tabId: number, parentPageId: string, url: string) {
     this.loggingService.logCall('startVisit', arguments);
-    const entry = new HistoryFlowEntry(tabId, parentPageId, url);
-    this.stack.push(entry);
+
+    this.databaseService.withRWTransaction((table) => {
+      const timeSpent = 0;
+      const startedAt = (new Date).getTime();
+
+      table.add({ tabId, parentPageId, url, timeSpent, startedAt });
+    });
   }
 
   setPageIdForTab(tabId: number, pageId: string) {
-    for (let entry of this.stack) {
-      if (entry.getTabId() === tabId && !entry.getPageId()) {
-        this.loggingService.logCall('setPageId', arguments);
-        entry.setPageId(pageId);
-        this.lookup.set(pageId, entry);
-        break;
+    this.databaseService.withRWTransaction(async(table) => {
+      const entries = await table.where({ tabId }).sortBy('id');
+      for (let entry of entries) {
+        if (!entry.pageId) {
+          table.update(entry.id, { pageId });
+        }
       }
-    }
+    });
   }
 
   setPageTitleForPageId(title: string, pageId: string) {
-    const entry = this.lookup.get(pageId);
-    entry.setTitle(title);
+    this.databaseService.withRWTransaction((table) => {
+      table.where({ pageId }).modify({ title });
+    });
   }
 
   setCurrentPageId(currentPageId: string) {
@@ -44,18 +48,20 @@ export default class HistoryFlowService {
   }
 
   tickTimeSpentForPageId(pageId: string, timeInMs: number) {
-    const entry = this.lookup.get(pageId);
-    if (entry) {
-      entry.addTimeSpent(timeInMs);
-    }
+    this.databaseService.withRWTransaction(async(table) => {
+      const entry = await table.where({ pageId }).first();
+      const timeSpent = entry.timeSpent + timeInMs;
+      table.update(entry.id, { timeSpent });
+    });
   }
 
   inspect(pageId: string) {
-    let entry = this.lookup.get(pageId);
-    if (entry) {
-      console.group(entry.getTitle());
-      this.inspect(entry.getParentPageId());
-      console.groupEnd();
-    }
+    this.databaseService.withRTransaction(async(table) => {
+      const entry = await table.where({ pageId }).first();
+      if (entry) {
+        console.log(entry.title, entry);
+        this.inspect(entry.parentPageId);
+      }
+    });
   }
 }
