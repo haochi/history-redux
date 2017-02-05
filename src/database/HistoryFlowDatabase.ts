@@ -7,8 +7,8 @@ export interface IHistoryFlowEntry {
     parentPageId?: string,
     title?: string,
     url: string,
-    startedAt?: number,
-    timeSpent?: number
+    startedAt: number,
+    timeSpent: number
 }
 
 export default class HistoryFlowDatabase extends Dexie {

@@ -2,6 +2,7 @@ import TabService from './service/TabService';
 import HistoryFlowService from './service/HistoryFlowService';
 import ScreenshotService from './service/ScreenshotService';
 import StorageService from './service/StorageService';
+import LoggingService from './service/LoggingService';
 import { inject } from './modules';
 import ArrayUtil from './util/ArrayUtil';
 import Message from './constant/Message';
@@ -11,6 +12,7 @@ class BackgroundApp {
     private historyFlowService = inject(HistoryFlowService);
     private screenshotService = inject(ScreenshotService);
     private storageService = inject(StorageService);
+    private loggingService = inject(LoggingService);
     private isChromeFocused = true;
     private tabTimeSpentEpoch = this.timestamp();
 
@@ -32,7 +34,7 @@ class BackgroundApp {
             });
         }).catch((e: Error) => {
             this.historyFlowService.setCurrentPageId(null);
-            console.log(e.message);
+            this.loggingService.log(`onTabFocusHandler(): ${e.message}`);
         });
     }
 

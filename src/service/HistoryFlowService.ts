@@ -16,18 +16,19 @@ export default class HistoryFlowService {
     this.databaseService.withRWTransaction((table) => {
       const timeSpent = 0;
       const startedAt = (new Date).getTime();
-
       table.add({ tabId, parentPageId, url, timeSpent, startedAt });
     });
   }
 
   setPageIdForTab(tabId: number, pageId: string) {
-    this.databaseService.withRWTransaction(async(table) => {
-      const entries = await table.where({ tabId }).sortBy('id');
-      for (let entry of entries) {
-        if (!entry.pageId) {
-          table.update(entry.id, { pageId });
-        }
+    this.loggingService.logCall('setPageIdForTab', arguments);
+    this.databaseService.withRWTransaction(async (table) => {
+      const entry = await table.where({ tabId }).reverse().first();
+
+      if (!entry.pageId) {
+        table.update(entry.id, { pageId });
+      } else {
+        this.loggingService.errorCall('setPageIdForTab', arguments, `looked for the wrong entry`);
       }
     });
   }
@@ -48,19 +49,28 @@ export default class HistoryFlowService {
   }
 
   tickTimeSpentForPageId(pageId: string, timeInMs: number) {
-    this.databaseService.withRWTransaction(async(table) => {
-      const entry = await table.where({ pageId }).first();
-      const timeSpent = entry.timeSpent + timeInMs;
-      table.update(entry.id, { timeSpent });
+    this.databaseService.withRWTransaction(async (table) => {
+      try {
+        const entry = await table.where({ pageId }).first();
+        const timeSpent = entry.timeSpent + timeInMs;
+        table.update(entry.id, { timeSpent });
+      } catch (e) {
+        // 
+      }
     });
   }
 
   inspect(pageId: string) {
-    this.databaseService.withRTransaction(async(table) => {
-      const entry = await table.where({ pageId }).first();
-      if (entry) {
-        console.log(entry.title, entry);
-        this.inspect(entry.parentPageId);
+    this.databaseService.withRTransaction(async (table) => {
+      let entry;
+      try {
+        entry = await table.where({ pageId }).first();
+        console.log(entry.title);
+        if (entry.parentPageId) {
+          this.inspect(entry.parentPageId);
+        }
+      } catch (e) {
+        this.loggingService.logCall('inspect', arguments);
       }
     });
   }

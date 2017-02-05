@@ -2,8 +2,28 @@ import StringUtil from '../util/StringUtil';
 
 export default class LoggingService {
     logCall(name: string, args: IArguments) {
+        this.log(`${name}(${this.joinArgs(args)})`);
+    }
+
+    errorCall(name: string, args: IArguments, message: any) {
+        this.error(`${name}(${this.joinArgs(args)})`, message);
+    }
+
+    log(message: string) {
+        console.log(this.messageWithTime(message));
+    }
+
+    error(message: string, e: any) {
+        console.error(this.messageWithTime(message), e);
+    }
+
+    joinArgs(args: IArguments) {
+        return Array.from(args).join(', ');
+    }
+
+    private messageWithTime(message: string) {
         const time = this.getTimeFromDate(new Date);
-        console.log(`${time}: ${name}(${Array.from(args).join(', ')})`);
+        return `${time}: ${message}`;
     }
 
     private getTimeFromDate(date: Date) {
