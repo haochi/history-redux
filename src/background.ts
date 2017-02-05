@@ -4,7 +4,7 @@ import ScreenshotService from './service/ScreenshotService';
 import StorageService from './service/StorageService';
 import { inject } from './modules';
 import ArrayUtil from './util/ArrayUtil';
-import Message from './constant/message';
+import Message from './constant/Message';
 
 class BackgroundApp {
     private tabsService = inject(TabService);

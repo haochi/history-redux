@@ -1,4 +1,4 @@
-import message from '../constant/message';
+import Message from '../constant/Message';
 import LoggingService from './LoggingService';
 
 export default class TabService {
@@ -20,7 +20,7 @@ export default class TabService {
 
     getPageId(tabId: number): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            chrome.tabs.sendMessage(tabId, { type: message.GET_PAGE_ID }, (response) => {
+            chrome.tabs.sendMessage(tabId, { type: Message.GET_PAGE_ID }, (response) => {
                 if (response) {
                     resolve(response.id);
                 } else {
@@ -32,7 +32,7 @@ export default class TabService {
 
     getPageTitle(tabId: number): Promise<string> {
         return new Promise<string>((resolve) => {
-            chrome.tabs.sendMessage(tabId, { type: message.GET_PAGE_TITLE }, (response) => {
+            chrome.tabs.sendMessage(tabId, { type: Message.GET_PAGE_TITLE }, (response) => {
                 resolve(response.title);
             });
         });

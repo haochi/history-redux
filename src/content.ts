@@ -1,7 +1,5 @@
 import CryptoUtil from './util/CryptoUtil';
-import message from './constant/message';
-
-const PAGE_ID = Symbol();
+import Message from './constant/Message';
 
 class ContentApp {
     private pageId: string;
@@ -13,17 +11,17 @@ class ContentApp {
         app.attachListeners();
     }
 
-    sendPageId() {
-        chrome.runtime.sendMessage({ type: message.SEND_PAGE_ID, id: this.pageId });
+    private sendPageId() {
+        chrome.runtime.sendMessage({ type: Message.SEND_PAGE_ID, id: this.pageId });
     }
 
-    sendTitle() {
-        chrome.runtime.sendMessage({ type: message.SEND_PAGE_TITLE, id: this.pageId, title: document.title });
+    private sendTitle() {
+        chrome.runtime.sendMessage({ type: Message.SEND_PAGE_TITLE, id: this.pageId, title: document.title });
     }
 
-    attachListeners() {
-        chrome.runtime.onMessage.addListener((request: { type: message }, sender, sendResponse) => {
-            if (request.type == message.GET_PAGE_ID) {
+    private attachListeners() {
+        chrome.runtime.onMessage.addListener((request: { type: Message }, sender, sendResponse) => {
+            if (request.type == Message.GET_PAGE_ID) {
                 sendResponse({ id: this.pageId });
             }
         });
@@ -33,7 +31,7 @@ class ContentApp {
         });
     }
 
-    setPageId() {
+    private setPageId() {
         this.pageId = CryptoUtil.uuid4();
     }
 }
