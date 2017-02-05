@@ -14,7 +14,7 @@ class BackgroundApp {
     private storageService = inject(StorageService);
     private loggingService = inject(LoggingService);
     private isChromeFocused = true;
-    private tabTimeSpentEpoch = this.timestamp();
+    private tabTimeSpentLastReset = this.timestamp();
 
     static main() {
         const app = new BackgroundApp();
@@ -43,8 +43,8 @@ class BackgroundApp {
             const pageId = this.historyFlowService.getCurrentPageId();
             if (pageId) {
                 const now = this.timestamp();
-                const diff = now - this.tabTimeSpentEpoch;
-                this.tabTimeSpentEpoch = now;
+                const diff = now - this.tabTimeSpentLastReset;
+                this.tabTimeSpentLastReset = now;
                 this.historyFlowService.tickTimeSpentForPageId(pageId, diff);
             }
         }, 1000);
@@ -107,14 +107,15 @@ class BackgroundApp {
     }
 
     private attachBrowserActionListeners() {
-        chrome.browserAction.onClicked.addListener((tab) => {
-            this.historyFlowService.inspect(this.historyFlowService.getCurrentPageId());
+        chrome.browserAction.onClicked.addListener(async (tab) => {
+            const ancestors = await this.historyFlowService.getAncestorsOfPageId(this.historyFlowService.getCurrentPageId());
+            console.log(ancestors.map(c => c.title));
             // this.tabsService.openUrlOrSwitchTab(chrome.extension.getURL('index.html'));
         });
     }
 
     private updateLastTabSwitch() {
-        this.tabTimeSpentEpoch = this.timestamp();
+        this.tabTimeSpentLastReset = this.timestamp();
     }
 
     private timestamp(): number {

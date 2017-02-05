@@ -1,4 +1,5 @@
-import HistoryFlowDatabase, { IHistoryFlowEntry } from '../database/HistoryFlowDatabase';
+import IHistoryFlowEntry from '../database/model/IHistoryFlowEntry';
+import HistoryFlowDatabase from '../database/HistoryFlowDatabase';
 import Dexie from 'dexie';
 
 type HistoryFlowEntryTable = Dexie.Table<IHistoryFlowEntry, number>;

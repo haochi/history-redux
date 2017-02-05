@@ -1,15 +1,5 @@
 import Dexie from 'dexie';
-
-export interface IHistoryFlowEntry {
-    id?: number,
-    tabId: number,
-    pageId?: string
-    parentPageId?: string,
-    title?: string,
-    url: string,
-    startedAt: number,
-    timeSpent: number
-}
+import IHistoryFlowEntry from './model/IHistoryFlowEntry';
 
 export default class HistoryFlowDatabase extends Dexie {
     entries: Dexie.Table<IHistoryFlowEntry, number>;

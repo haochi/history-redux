@@ -1,6 +1,6 @@
 import LoggingService from '../service/LoggingService';
 import DatabaseService from '../service/DatabaseService';
-import { IHistoryFlowEntry } from '../database/HistoryFlowDatabase';
+import IHistoryFlowEntry from '../database/model/IHistoryFlowEntry';
 import CryptoUtil from '../util/CryptoUtil';
 
 export default class HistoryFlowService {
@@ -29,10 +29,10 @@ export default class HistoryFlowService {
         if (!entry.pageId) {
           table.update(entry.id, { pageId });
         } else {
-          this.loggingService.errorCall('setPageIdForTab', arguments, `looked for the wrong entry`);
+          this.loggingService.log(`setPageIdForTab(${tabId}, ${pageId}): looked for the wrong entry`);
         }
       } catch (e) {
-        this.loggingService.errorCall('setPageIdForTab', arguments, e);
+          this.loggingService.errorCall(`setPageIdForTab(${tabId}, ${pageId})`, e);
       }
     });
   }
@@ -59,23 +59,29 @@ export default class HistoryFlowService {
         const timeSpent = entry.timeSpent + timeInMs;
         table.update(entry.id, { timeSpent });
       } catch (e) {
-        // 
+        this.loggingService.log(`Can't update timeSpent for ${pageId}`);
       }
     });
   }
 
-  inspect(pageId: string) {
-    this.databaseService.withRTransaction(async (table) => {
-      let entry;
-      try {
-        entry = await table.where({ pageId }).first();
-        this.loggingService.log(entry.title);
-        if (entry.parentPageId) {
-          this.inspect(entry.parentPageId);
-        }
-      } catch (e) {
-        this.loggingService.logCall('inspect', arguments);
-      }
+  async getAncestorsOfPageId(pageId: string): Promise<IHistoryFlowEntry[]> {
+    const ancestors: IHistoryFlowEntry[] = [];
+    const entry = await this.databaseService.withRTransaction(async (table) => {
+      return table.where({ pageId }).first();
     });
+    return this.recursiveParentLookup(entry.parentPageId, ancestors);
+  }
+
+  async recursiveParentLookup(pageId: string, ancestors: IHistoryFlowEntry[]): Promise<IHistoryFlowEntry[]> {
+    if (!pageId) {
+      return ancestors;
+    }
+
+    const entry = await this.databaseService.withRTransaction((table) => {
+      return table.where({ pageId }).first();
+    });
+
+    ancestors.push(entry);
+    return this.recursiveParentLookup(entry.parentPageId, ancestors);
   }
 }

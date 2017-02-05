@@ -5,8 +5,8 @@ export default class LoggingService {
         this.log(`${name}(${this.joinArgs(args)})`);
     }
 
-    errorCall(name: string, args: IArguments, message: any) {
-        this.error(`${name}(${this.joinArgs(args)})`, message);
+    errorCall(name: string, message: any) {
+        this.error(`${name}`, message);
     }
 
     log(message: string) {
