@@ -65,7 +65,7 @@ export default class HistoryFlowService {
       let entry;
       try {
         entry = await table.where({ pageId }).first();
-        console.log(entry.title);
+        this.loggingService.log(entry.title);
         if (entry.parentPageId) {
           this.inspect(entry.parentPageId);
         }

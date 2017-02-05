@@ -19,7 +19,7 @@ export default class ScreenshotService {
                 };
                 image.src = dataUrl;
             }).catch(e => {
-                console.error("Can't capture screenshot for", windowId, e);
+                this.loggingService.errorCall(`Can't capture screenshot for $${window}`, arguments, e);
             });
         });
     }
