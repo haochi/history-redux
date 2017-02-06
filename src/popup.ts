@@ -1,6 +1,5 @@
 import injector from './modules';
 import BackgroundApp, { BackgroundPage } from './background';
-import HistoryFlowEntryViewModel from './model/HistoryFlowEntryViewModel';
 import Vue = require('vue');
 
 class PopupApp {
@@ -29,8 +28,8 @@ class PopupApp {
                 entries
             },
             methods: {
-                open(entry: HistoryFlowEntryViewModel) {
-                    tabsService.openUrlOrSwitchTab(entry.url);
+                open(url: string) {
+                    tabsService.openUrlOrSwitchTab(url);
                 }
             }
         });
