@@ -31,3 +31,7 @@ li .screenshot {
     width: 100%;
     margin-bottom: var(--gap);
 }
+
+.no-entries {
+    text-align: center;
+}

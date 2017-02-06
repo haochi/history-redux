@@ -78,11 +78,9 @@ export default class HistoryFlowService {
   }
 
   private async getAncestorsOfPageId(pageId: string): Promise<IHistoryFlowEntry[]> {
-    const ancestors: IHistoryFlowEntry[] = [];
-    const entry = await this.databaseService.withRTransaction(async (table) => {
-      return table.where({ pageId }).first();
-    });
-    return this.recursiveParentLookup(entry.parentPageId, ancestors);
+    const entries = await this.recursiveParentLookup(pageId, []);
+    entries.shift(); // we don't need the current entry
+    return entries;
   }
 
   private async recursiveParentLookup(pageId: string, ancestors: IHistoryFlowEntry[]): Promise<IHistoryFlowEntry[]> {

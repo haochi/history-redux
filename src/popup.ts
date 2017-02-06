@@ -17,9 +17,10 @@ class PopupApp {
 
     static async main() {
         const app = new PopupApp();
-        const background = await app.getBackgroundApp();
-        const historyFlowService = await background.getHistoryFlowService();
-        const tabsService = await background.getTabsService();
+        const background = await app.getBackground();
+        const historyFlowService = await background.app.getHistoryFlowService();
+        const tabsService = await background.app.getTabsService();
+        
         const entries = await historyFlowService.getAncestorsWithScreenshotOfPageId(historyFlowService.getCurrentPageId());
 
         const view = new Vue({
