@@ -37,14 +37,23 @@ export default class BackgroundApp {
         return this.tabsService;
     }
 
-    private async onTabFocusHandler(tabId: number, windowId: number) {
+    private async setCurrentPageIdFromTab(tabId: number): Promise<string> {
         try {
             const pageId = await this.tabsService.getPageId(tabId);
             this.historyFlowService.setCurrentPageId(pageId);
-            this.screenshotService.takeScreenshot(pageId, windowId);
         } catch (e) {
             this.historyFlowService.setCurrentPageId(null);
-            this.loggingService.error(`onTabFocusHandler(${tabId}, ${windowId})`, e);
+            this.loggingService.error(`onTabFocusHandler(${tabId})`, e);
+        }
+        return this.historyFlowService.getCurrentPageId();
+    }
+
+    private async takeScreenshot(pageId: string, windowId: number, override: boolean) {
+        if (pageId) {
+            const hasScreenshot = await this.screenshotService.hasScreenshot(pageId);
+            if (!hasScreenshot || override) {
+                this.screenshotService.takeScreenshot(pageId, windowId);
+            }
         }
     }
 
@@ -68,6 +77,7 @@ export default class BackgroundApp {
             }
         }, { urls: ["<all_urls>"] });
 
+        // if history push state occurred, we need to handle that as a page load
         chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
             if (details.frameId === 0) {
                 this.historyFlowService.startVisit(details.tabId, this.historyFlowService.getCurrentPageId(), details.url);
@@ -75,31 +85,68 @@ export default class BackgroundApp {
                 chrome.tabs.sendMessage(details.tabId, { type: Message.HISTORY_GET_PAGE_ID }, async (response: { id: string }) => {
                     this.historyFlowService.setPageIdForTab(details.tabId, response.id);
                     const tab = await this.tabsService.get(details.tabId);
-                    this.onTabFocusHandler(details.tabId, tab.windowId);
+                    this.setCurrentPageIdFromTab(details.tabId);
                 });
             }
         });
 
+        // set page id
         chrome.runtime.onMessage.addListener((message: { type: Message, id: string }, sender, sendResponse) => {
             if (message.type === Message.SEND_PAGE_ID) {
                 this.historyFlowService.setPageIdForTab(sender.tab.id, message.id);
                 if (sender.tab.active) {
-                    this.onTabFocusHandler(sender.tab.id, sender.tab.windowId);
+                    this.setCurrentPageIdFromTab(sender.tab.id);
                 }
             }
         });
 
+        // set title and take screenshot if the tab is active
         chrome.runtime.onMessage.addListener((message: { type: Message, id: string, title: string }, sender, sendResponse) => {
-            if (message.type === Message.SEND_PAGE_TITLE) {
+            if (message.type === Message.SEND_PAGE_READY) {
                 this.historyFlowService.setPageTitleForPageId(message.title, message.id);
+                if (sender.tab.active) {
+                    this.takeScreenshot(message.id, sender.tab.windowId, false);
+                }
+            }
+        });
+
+        // all resources are loaded, tell content script to mark itself ready for new screenshot
+        chrome.webNavigation.onCompleted.addListener(async (details) => {
+            const tab = await this.tabsService.get(details.tabId);
+            if (tab.active) {
+                const pageId = await this.tabsService.getPageId(tab.id);
+                this.takeScreenshot(pageId, tab.windowId, true);
+            } else {
+                chrome.tabs.sendMessage(details.tabId, { type: Message.SEND_PAGE_LOAD_COMPLETED });
             }
         });
     }
 
+    private checkIfNewScreenshotIsNeeded(tabId: number): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            chrome.tabs.sendMessage(tabId, { type: Message.GET_PAGE_SCREENSHOT_OVERRIDE }, (response: {override: boolean}) => {
+                const override: boolean = response && response.override;
+                resolve(override);
+            });
+        }).then(override => {
+            // acknowledge the receipt of the override request
+            if (override) {
+                chrome.tabs.sendMessage(tabId, { type: Message.SEND_PAGE_SCREENSHOT_OVERRIDE_ACK });
+            }
+            return override;
+        });
+    }
+
     private attachActiveTabListeners() {
-        chrome.tabs.onActivated.addListener((activeInfo) => {
+        const onNewTab = async (tabId, windowId) => {
+            const pageId = await this.setCurrentPageIdFromTab(tabId);
+            const needNewScreenshot = await this.checkIfNewScreenshotIsNeeded(tabId);
+            this.takeScreenshot(pageId, windowId, needNewScreenshot);
+        }
+
+        chrome.tabs.onActivated.addListener(async (activeInfo) => {
             this.updateLastTabSwitch();
-            this.onTabFocusHandler(activeInfo.tabId, activeInfo.windowId);
+            onNewTab(activeInfo.tabId, activeInfo.windowId);
         });
 
         chrome.windows.onFocusChanged.addListener((windowId) => {
@@ -108,9 +155,9 @@ export default class BackgroundApp {
             if (windowId === chrome.windows.WINDOW_ID_NONE) {
                 this.isChromeFocused = false;
             } else {
-                chrome.windows.get(windowId, { populate: true }, (win) => {
+                chrome.windows.get(windowId, { populate: true }, async (win) => {
                     const activeTab = ArrayUtil.first(win.tabs.filter((tab) => tab.active));
-                    this.onTabFocusHandler(activeTab.id, activeTab.windowId);
+                    onNewTab(activeTab.id, activeTab.windowId);
                 });
             }
         });

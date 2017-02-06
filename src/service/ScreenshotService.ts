@@ -1,6 +1,7 @@
 import TabService from './TabService';
 import StorageService from './StorageService';
 import LoggingService from './LoggingService';
+import pica = require('pica');
 
 export default class ScreenshotService {
     private desiredScreenshotHeight = 250;
@@ -11,19 +12,26 @@ export default class ScreenshotService {
 
     takeScreenshot(pageId: string, windowId: number): Promise<void> {
         this.loggingService.logCall('takeScreenshot', arguments);
-        return new Promise<void>(async (resolve) => {
+        return new Promise<void>(async (resolve, reject) => {
             try {
-                const dataUrl = await this.tabService.captureVisibleTab(windowId, { format: "jpeg" });
+                const dataUrl = await this.tabService.captureVisibleTab(windowId, { format: 'png' });
                 const image = document.createElement('img');
                 image.onload = async () => {
-                    const dataUrl = await this.saveScreenshot(pageId, this.resize(image));
-                    resolve(dataUrl);
+                    const dataUrl = await this.resize(image);
+                    this.saveScreenshot(pageId, dataUrl);
                 };
                 image.src = dataUrl;
             } catch (e) {
                 this.loggingService.log(`Can't capture screenshot for ${pageId} for windowId: ${windowId}`);
+                reject(e);
             }
         });
+    }
+
+    async hasScreenshot(pageId: string): Promise<boolean> {
+        const key = this.key(pageId);
+        const value = await this.storageService.get(key);
+        return value.hasOwnProperty(key);
     }
 
     saveScreenshot(id: string, dataUrl: string) {
@@ -39,16 +47,28 @@ export default class ScreenshotService {
         return this.screenshotPrefix + id;
     }
 
-    private resize(image: HTMLImageElement): string {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        const ratio = this.desiredScreenshotHeight / image.height;
-        const desiredScreenshotWidth = image.width * ratio;
+    private resize(image: HTMLImageElement): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const ratio = this.desiredScreenshotHeight / image.height;
 
-        canvas.width = desiredScreenshotWidth;
-        canvas.height = this.desiredScreenshotHeight;
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            const fromCanvas = document.createElement('canvas');
+            const fromContext = fromCanvas.getContext('2d');
+            const toCanvas = document.createElement('canvas');
 
-        return canvas.toDataURL('image/jpeg');
+            fromCanvas.width = image.width;
+            fromCanvas.height = image.height;
+            fromContext.drawImage(image, 0, 0, fromCanvas.width, fromCanvas.height);
+
+            toCanvas.width = image.width * ratio;
+            toCanvas.height = this.desiredScreenshotHeight;
+
+            pica.resizeCanvas(fromCanvas, toCanvas, { unsharpAmount: 75 }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(toCanvas.toDataURL('image/jpeg'));
+                }
+            });
+        });
     }
 }

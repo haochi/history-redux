@@ -3,6 +3,7 @@ import Message from './constant/Message';
 
 class ContentApp {
     private pageId: string;
+    private screenshotOverride: boolean = false;
 
     static main() {
         const app = new ContentApp();
@@ -16,7 +17,7 @@ class ContentApp {
     }
 
     private sendTitle() {
-        chrome.runtime.sendMessage({ type: Message.SEND_PAGE_TITLE, id: this.pageId, title: document.title });
+        chrome.runtime.sendMessage({ type: Message.SEND_PAGE_READY, id: this.pageId, title: document.title });
     }
 
     private attachListeners() {
@@ -27,6 +28,12 @@ class ContentApp {
                 this.setPageId();
                 sendResponse({ id: this.pageId });
                 this.sendTitle();
+            } else if (request.type === Message.SEND_PAGE_LOAD_COMPLETED) {
+                this.screenshotOverride = true;
+            } else if (request.type === Message.GET_PAGE_SCREENSHOT_OVERRIDE) {
+                sendResponse({ id: this.pageId, override: this.screenshotOverride });
+            } else if (request.type === Message.SEND_PAGE_SCREENSHOT_OVERRIDE_ACK) {
+                this.screenshotOverride = false;
             }
         });
 

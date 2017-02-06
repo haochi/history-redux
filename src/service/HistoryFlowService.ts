@@ -40,6 +40,7 @@ export default class HistoryFlowService {
   }
 
   setPageTitleForPageId(title: string, pageId: string) {
+    this.loggingService.logCall('setPageTitleForPageId', arguments);
     this.databaseService.withRWTransaction((table) => {
       table.where({ pageId }).modify({ title });
     });
@@ -92,7 +93,10 @@ export default class HistoryFlowService {
       return table.where({ pageId }).first();
     });
 
-    ancestors.push(entry);
-    return this.recursiveParentLookup(entry.parentPageId, ancestors);
+    if (entry) {
+      return this.recursiveParentLookup(entry.parentPageId, ancestors.concat(entry));
+    } else {
+      return ancestors;
+    }
   }
 }
