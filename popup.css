@@ -1,5 +1,6 @@
 :root {
     --gap: 10px;
+    --gray-border-color: #e8e8e8;
 }
 
 body {
@@ -15,12 +16,10 @@ ul {
 
 li {
     margin-bottom: var(--gap);
-    padding-bottom: var(--gap);
+    padding: var(--gap);
     cursor: pointer;
-}
-
-li:not(:last-child) {
-    border-bottom: 1px dotted dimgray;
+    border: 1px solid var(--gray-border-color);
+    border-radius: 3px;
 }
 
 li .title {
