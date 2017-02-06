@@ -26,12 +26,6 @@ export default class ScreenshotService {
         });
     }
 
-    async hasScreenshot(id: string) {
-        const key = this.key(id);
-        const value = await this.storageService.get(key)
-        return value.hasOwnProperty(key);
-    }
-
     saveScreenshot(id: string, dataUrl: string) {
         const key = this.key(id);
         return this.storageService.set({ [key]: dataUrl });

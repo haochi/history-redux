@@ -41,13 +41,10 @@ export default class BackgroundApp {
         try {
             const pageId = await this.tabsService.getPageId(tabId);
             this.historyFlowService.setCurrentPageId(pageId);
-            const hasScreenshot = await this.screenshotService.hasScreenshot(pageId);
-            if (!hasScreenshot) {
-                this.screenshotService.takeScreenshot(pageId, windowId);
-            }
+            this.screenshotService.takeScreenshot(pageId, windowId);
         } catch (e) {
             this.historyFlowService.setCurrentPageId(null);
-            this.loggingService.log(`onTabFocusHandler(): ${e.message}`);
+            this.loggingService.error(`onTabFocusHandler(${tabId}, ${windowId})`, e);
         }
     }
 
