@@ -22,6 +22,7 @@
     "typescript": "^2.1.5",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
+    "vue": "csp",
     "watchify": "^3.9.0"
   }
 }

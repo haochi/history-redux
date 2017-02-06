@@ -1,0 +1,33 @@
+:root {
+    --gap: 10px;
+}
+
+body {
+    width: 300px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 1em;
+}
+
+ul {
+   list-style: none;
+   padding-left: 0;
+}
+
+li {
+    margin-bottom: var(--gap);
+    padding-bottom: var(--gap);
+    cursor: pointer;
+}
+
+li:not(:last-child) {
+    border-bottom: 1px dotted dimgray;
+}
+
+li .title {
+    color: cornflowerblue;
+}
+
+li .screenshot {
+    width: 100%;
+    margin-bottom: var(--gap);
+}

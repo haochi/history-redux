@@ -15,13 +15,13 @@ export default class ScreenshotService {
             try {
                 const dataUrl = await this.tabService.captureVisibleTab(windowId, { format: "jpeg" });
                 const image = document.createElement('img');
-                image.onload = async() => {
+                image.onload = async () => {
                     const dataUrl = await this.saveScreenshot(pageId, this.resize(image));
                     resolve(dataUrl);
                 };
                 image.src = dataUrl;
             } catch (e) {
-                this.loggingService.log(`Can't capture screenshot for ${pageId} for windowId: $${windowId}`);
+                this.loggingService.log(`Can't capture screenshot for ${pageId} for windowId: ${windowId}`);
             }
         });
     }
@@ -37,7 +37,11 @@ export default class ScreenshotService {
         return this.storageService.set({ [key]: dataUrl });
     }
 
-    private key(id: string) {
+    getScreenshots(keys: string[]) {
+        return this.storageService.get(keys.map(key => this.key(key)));
+    }
+
+    key(id: string): string {
         return this.screenshotPrefix + id;
     }
 

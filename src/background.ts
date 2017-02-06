@@ -7,7 +7,11 @@ import { inject } from './modules';
 import ArrayUtil from './util/ArrayUtil';
 import Message from './constant/Message';
 
-class BackgroundApp {
+export interface BackgroundPage extends Window {
+    app: BackgroundApp
+}
+
+export default class BackgroundApp {
     private tabsService = inject(TabService);
     private historyFlowService = inject(HistoryFlowService);
     private screenshotService = inject(ScreenshotService);
@@ -22,6 +26,15 @@ class BackgroundApp {
         app.attachBrowserActionListeners();
         app.attachRequestFlowListeners();
         app.attachTabPinger();
+        return app;
+    }
+
+    getHistoryFlowService() {
+        return this.historyFlowService;
+    }
+
+    getTabsService() {
+        return this.tabsService;
     }
 
     private async onTabFocusHandler(tabId: number, windowId: number) {
@@ -108,8 +121,8 @@ class BackgroundApp {
 
     private attachBrowserActionListeners() {
         chrome.browserAction.onClicked.addListener(async (tab) => {
-            const ancestors = await this.historyFlowService.getAncestorsOfPageId(this.historyFlowService.getCurrentPageId());
-            console.log(ancestors.map(c => c.title));
+            // const ancestors = await this.historyFlowService.getAncestorsOfPageId(this.historyFlowService.getCurrentPageId());
+            // console.log(ancestors.map(c => c.title));
             // this.tabsService.openUrlOrSwitchTab(chrome.extension.getURL('index.html'));
         });
     }
@@ -123,4 +136,6 @@ class BackgroundApp {
     }
 }
 
-BackgroundApp.main();
+// export to window
+const win = window as BackgroundPage;
+win.app = BackgroundApp.main();

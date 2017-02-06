@@ -1,5 +1,7 @@
 import LoggingService from '../service/LoggingService';
 import DatabaseService from '../service/DatabaseService';
+import ScreenshotService from '../service/ScreenshotService';
+import HistoryFlowEntryViewModel from '../model/HistoryFlowEntryViewModel';
 import IHistoryFlowEntry from '../database/model/IHistoryFlowEntry';
 import CryptoUtil from '../util/CryptoUtil';
 
@@ -7,7 +9,7 @@ export default class HistoryFlowService {
   private activeTabId = -1;
   private currentPageId: string = null;
 
-  constructor(private loggingService: LoggingService, private databaseService: DatabaseService) {
+  constructor(private loggingService: LoggingService, private databaseService: DatabaseService, private screenshotService: ScreenshotService) {
   }
 
   startVisit(tabId: number, parentPageId: string, url: string) {
@@ -32,7 +34,7 @@ export default class HistoryFlowService {
           this.loggingService.log(`setPageIdForTab(${tabId}, ${pageId}): looked for the wrong entry`);
         }
       } catch (e) {
-          this.loggingService.errorCall(`setPageIdForTab(${tabId}, ${pageId})`, e);
+        this.loggingService.errorCall(`setPageIdForTab(${tabId}, ${pageId})`, e);
       }
     });
   }
@@ -64,7 +66,18 @@ export default class HistoryFlowService {
     });
   }
 
-  async getAncestorsOfPageId(pageId: string): Promise<IHistoryFlowEntry[]> {
+  async getAncestorsWithScreenshotOfPageId(pageId: string) {
+    const ancestors = await this.getAncestorsOfPageId(pageId);
+    const screenshots = await this.screenshotService.getScreenshots(ancestors.map(a => a.pageId));
+
+    return ancestors.map(ancestor => {
+      return new HistoryFlowEntryViewModel(ancestor, {
+        url: screenshots[this.screenshotService.key(ancestor.pageId)]
+      });
+    });
+  }
+
+  private async getAncestorsOfPageId(pageId: string): Promise<IHistoryFlowEntry[]> {
     const ancestors: IHistoryFlowEntry[] = [];
     const entry = await this.databaseService.withRTransaction(async (table) => {
       return table.where({ pageId }).first();
@@ -72,7 +85,7 @@ export default class HistoryFlowService {
     return this.recursiveParentLookup(entry.parentPageId, ancestors);
   }
 
-  async recursiveParentLookup(pageId: string, ancestors: IHistoryFlowEntry[]): Promise<IHistoryFlowEntry[]> {
+  private async recursiveParentLookup(pageId: string, ancestors: IHistoryFlowEntry[]): Promise<IHistoryFlowEntry[]> {
     if (!pageId) {
       return ancestors;
     }

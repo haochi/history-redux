@@ -15,8 +15,8 @@ injector.bind(LoggingService);
 injector.bind(StorageService);
 injector.bind(DatabaseService);
 injector.bindTo(TabService, new TabService(inject(LoggingService)));
-injector.bindTo(HistoryFlowService, new HistoryFlowService(inject(LoggingService), inject(DatabaseService)));
 injector.bindTo(ScreenshotService, new ScreenshotService(inject(TabService), inject(StorageService), inject(LoggingService)));
+injector.bindTo(HistoryFlowService, new HistoryFlowService(inject(LoggingService), inject(DatabaseService), inject(ScreenshotService)));
 
 export default injector;
 export { inject };

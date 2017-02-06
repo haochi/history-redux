@@ -1,0 +1,15 @@
+<link href="popup.css" rel="stylesheet">
+<div id="app">
+    <ul>
+        <li v-for="entry in entries" v-on:click="open(entry)">
+            <div>
+                <img class="screenshot" v-bind:src="entry.screenshot" v-bind:alt="entry.title" />
+            </div>
+            <div>
+                <span class="title">{{ entry.title }}</span>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<script src="dist/popup.js"></script>
