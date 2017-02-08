@@ -41,7 +41,7 @@ const bundle = (bundler, out) => {
 }
 
 const watchers = new Map([
-    // ['index', new Watcher('index.js', ['src/index.ts'])],
+    ['index', new Watcher('index.js', ['src/index.ts'])],
     ['background', new Watcher('background.js', ['src/background.ts'])],
     ['popup', new Watcher('popup.js', ['src/popup.ts'])],
     ['content', new Watcher('content.js', ['src/content.ts'])],
@@ -56,7 +56,7 @@ watchers.forEach((watcher) => {
 });
 
 gulp.task("default", () => {
-    // watchers.get('index').bundler();
+    watchers.get('index').bundler();
     watchers.get('background').bundler();
     watchers.get('popup').bundler();
     watchers.get('content').bundler();

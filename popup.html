@@ -2,7 +2,7 @@
 <div id="app">
     <ul class="entries" v-if="entries.length">
         <li v-for="entry in entries" v-on:click="open(entry.url)" v-bind:title="entry.url">
-            <div>
+            <div v-if="entry.screenshot">
                 <img class="screenshot" v-bind:src="entry.screenshot" v-bind:alt="entry.title" />
             </div>
             <div>

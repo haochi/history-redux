@@ -4,7 +4,7 @@ import LoggingService from './LoggingService';
 import pica = require('pica');
 
 export default class ScreenshotService {
-    private desiredScreenshotHeight = 250;
+    private desiredScreenshotWidth = 250;
     private screenshotPrefix = 'screenshot:';
 
     constructor(private tabService: TabService, private storageService: StorageService, private loggingService: LoggingService) {
@@ -49,7 +49,7 @@ export default class ScreenshotService {
 
     private resize(image: HTMLImageElement): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            const ratio = this.desiredScreenshotHeight / image.height;
+            const ratio = this.desiredScreenshotWidth / image.width;
 
             const fromCanvas = document.createElement('canvas');
             const fromContext = fromCanvas.getContext('2d');
@@ -59,8 +59,8 @@ export default class ScreenshotService {
             fromCanvas.height = image.height;
             fromContext.drawImage(image, 0, 0, fromCanvas.width, fromCanvas.height);
 
-            toCanvas.width = image.width * ratio;
-            toCanvas.height = this.desiredScreenshotHeight;
+            toCanvas.width = this.desiredScreenshotWidth;
+            toCanvas.height = image.height * ratio;
 
             pica.resizeCanvas(fromCanvas, toCanvas, { unsharpAmount: 75 }, (err) => {
                 if (err) {

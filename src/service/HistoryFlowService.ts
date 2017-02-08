@@ -67,6 +67,10 @@ export default class HistoryFlowService {
     });
   }
 
+  getAllEntries() {
+    return this.databaseService.withRTransaction(table => table.toArray());
+  }
+
   async getAncestorsWithScreenshotOfPageId(pageId: string) {
     const ancestors = await this.getAncestorsOfPageId(pageId);
     const screenshots = await this.screenshotService.getScreenshots(ancestors.map(a => a.pageId));

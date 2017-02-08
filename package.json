@@ -10,9 +10,11 @@
   "license": "MIT",
   "devDependencies": {
     "@types/chrome": "^0.0.38",
+    "@types/d3": "^4.5.0",
     "@types/es6-shim": "^0.31.32",
     "brfs": "^1.4.3",
     "browserify": "^14.0.0",
+    "d3": "^4.5.0",
     "dexie": "^2.0.0-beta",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^2.4.0",
